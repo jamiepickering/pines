@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meat Market · Orders & Manager Overview</title>
+<style>
+:root{
+  --bg:#111820;
+  --panel:#19242d;
+  --panel2:#22313c;
+  --line:#354955;
+  --text:#f4efe8;
+  --muted:#b7c1c7;
+  --accent:#b63b42;
+  --accent2:#db7a67;
+  --good:#62c497;
+  --warn:#e3ba68;
+  --shadow:0 18px 55px rgba(0,0,0,.28);
+  --radius:22px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(182,59,66,.16), transparent 28rem),
+    radial-gradient(circle at 90% 0%, rgba(219,122,103,.09), transparent 25rem),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1220px;margin:0 auto;padding:28px 18px 60px}
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  margin-bottom:22px;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{
+  width:50px;height:50px;border-radius:16px;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--accent),#7d252b);box-shadow:var(--shadow);
+  font-size:26px
+}
+h1{font-size:clamp(1.55rem,2.8vw,2.4rem);margin:0;letter-spacing:-.04em}
+.subtitle{color:var(--muted);margin:.3rem 0 0;font-size:.96rem}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  border:1px solid var(--line);background:var(--panel2);color:var(--text);
+  border-radius:13px;padding:11px 15px;font-weight:800;transition:.18s ease;
+}
+.btn:hover{transform:translateY(-1px);border-color:#5c7380}
+.btn.primary{background:var(--accent);border-color:var(--accent)}
+.btn.primary:hover{background:#c3464d}
+.btn.good{background:#23694f;border-color:#2d8665}
+.btn.danger{background:#57282c;border-color:#7c343b}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(310px,.75fr);gap:18px}
+.card{
+  background:linear-gradient(180deg,rgba(34,49,60,.94),rgba(25,36,45,.97));
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+}
+.pad{padding:22px}
+.card h2,.card h3{margin:0}
+.section-head{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  margin-bottom:18px
+}
+.badge{
+  padding:7px 10px;border-radius:999px;font-size:.82rem;font-weight:900;
+  background:rgba(182,59,66,.15);border:1px solid rgba(219,122,103,.4);color:#ffd8d2
+}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+label{display:block;color:var(--muted);font-size:.79rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+input,textarea,select{
+  width:100%;border:1px solid var(--line);background:#111a21;color:var(--text);
+  border-radius:12px;padding:11px 12px;outline:none;
+}
+input:focus,textarea:focus,select:focus{border-color:#a0575c;box-shadow:0 0 0 3px rgba(182,59,66,.12)}
+.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.product{
+  display:grid;grid-template-columns:76px 1fr;gap:13px;align-items:center;
+  border:1px solid var(--line);border-radius:16px;padding:12px;background:rgba(12,19,24,.42)
+}
+.product img{
+  width:76px;height:76px;object-fit:cover;border-radius:14px;border:1px solid #344b59
+}
+.product-name{font-weight:900;font-size:1rem;margin-bottom:9px}
+.row2{display:grid;grid-template-columns:86px 1fr;gap:8px}
+.mini label{font-size:.68rem;margin-bottom:5px}
+.mini input{padding:9px 9px}
+.summary{position:sticky;top:18px}
+.sumrow{
+  display:flex;justify-content:space-between;gap:15px;padding:12px 0;
+  border-bottom:1px dashed rgba(183,193,199,.22)
+}
+.sumrow span:first-child{color:var(--muted)}
+.sumrow.total{font-size:1.3rem;font-weight:950;border-bottom:0;padding-top:18px}
+.sumrow.total span:first-child{color:var(--text)}
+.total-value{color:#ffd7c9}
+.ticket-items{margin:14px 0 2px;padding:0;list-style:none}
+.ticket-items li{
+  display:flex;justify-content:space-between;gap:12px;color:var(--muted);
+  padding:6px 0;font-size:.92rem
+}
+.ticket-items strong{color:var(--text)}
+.stack{display:grid;gap:10px;margin-top:17px}
+.webhook-box{
+  margin-top:18px;padding-top:16px;border-top:1px solid var(--line)
+}
+.hint{color:var(--muted);font-size:.78rem;line-height:1.45;margin:8px 0 0}
+.toast{
+  position:fixed;right:18px;bottom:18px;z-index:99;max-width:360px;
+  background:#0d151b;border:1px solid var(--line);border-radius:14px;
+  padding:13px 15px;box-shadow:var(--shadow);display:none
+}
+.toast.show{display:block}
+.manager{display:none;margin-top:18px}
+.manager.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.stat{
+  padding:16px;border:1px solid var(--line);background:rgba(15,23,29,.5);border-radius:16px
+}
+.stat small{display:block;color:var(--muted);font-weight:800;margin-bottom:7px}
+.stat b{font-size:1.28rem}
+.manager-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.table-card{overflow:hidden}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:12px 13px;border-bottom:1px solid rgba(53,73,85,.7);text-align:left;font-size:.9rem}
+th{color:var(--muted);font-size:.73rem;text-transform:uppercase;letter-spacing:.07em;background:rgba(11,17,22,.3)}
+td.num,th.num{text-align:right}
+.empty{padding:24px;color:var(--muted);text-align:center}
+.manager-tools{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.full{grid-column:1/-1}
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(3,8,12,.73);display:none;place-items:center;
+  z-index:80;padding:20px
+}
+.modal-backdrop.open{display:grid}
+.modal{width:min(620px,100%);max-height:88vh;overflow:auto}
+.modal .section-head{position:sticky;top:0;background:var(--panel2);padding-bottom:10px;z-index:2}
+.default-row{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center;margin:9px 0}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn);margin-right:7px}
+.status-dot.ok{background:var(--good)}
+.small{font-size:.83rem}
+.footer{text-align:center;color:#7f909a;font-size:.78rem;margin-top:24px}
+@media(max-width:930px){
+  .grid{grid-template-columns:1fr}
+  .summary{position:static}
+  .stats{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:680px){
+  .topbar{align-items:flex-start;flex-direction:column}
+  .fields,.product-grid,.manager-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .product{grid-template-columns:64px 1fr}
+  .product img{width:64px;height:64px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🥩</div>
+      <div>
+        <h1 id="businessTitle">Meat Market Order Calculator</h1>
+        <p class="subtitle">build the order · calculate 10% tax · log sales · manager overview</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="settingsBtn">⚙ Settings</button>
+      <button class="btn" id="managerBtn">📊 Manager overview</button>
+    </div>
+  </div>
+
+  <section id="orderView">
+    <div class="grid">
+      <div class="card pad">
+        <div class="section-head">
+          <div>
+            <h2>Order Ticket</h2>
+            <div class="hint">Employees can enter a different unit price for every product on every sale.</div>
+          </div>
+          <span class="badge">10% TAX</span>
+        </div>
+
+        <div class="fields">
+          <div>
+            <label for="employee">Employee</label>
+            <input id="employee" autocomplete="name" placeholder="Who is serving?">
+          </div>
+          <div>
+            <label for="customer">Customer name</label>
+            <input id="customer" autocomplete="off" placeholder="Who's the order for?">
+          </div>
+        </div>
+
+        <div class="product-grid" id="productGrid"></div>
+      </div>
+
+      <div class="card pad summary">
+        <div class="section-head">
+          <h2>Bill</h2>
+          <span class="small" id="orderIdPreview">New order</span>
+        </div>
+
+        <ul class="ticket-items" id="ticketItems">
+          <li><span>No products added yet</span><strong>—</strong></li>
+        </ul>
+
+        <div class="sumrow"><span>Subtotal</span><strong id="subtotal">$0.00</strong></div>
+        <div class="sumrow"><span>Tax (10%)</span><strong id="tax">$0.00</strong></div>
+        <div class="sumrow total"><span>Total</span><span class="total-value" id="total">$0.00</span></div>
+
+        <div class="stack">
+          <button class="btn primary" id="logBtn">✦ Log sale</button>
+          <button class="btn" id="copyBtn">Copy ticket</button>
+          <button class="btn" id="clearBtn">Clear current order</button>
+        </div>
+
+        <div class="webhook-box">
+          <label for="webhook">Discord webhook</label>
+          <input id="webhook" type="password" placeholder="https://discord.com/api/webhooks/…">
+          <div class="stack">
+            <button class="btn" id="sendDiscordBtn">Send current ticket to Discord</button>
+          </div>
+          <p class="hint">Webhook can be remembered on this device in Settings. On a static GitHub Pages site it is browser-side, so it is not a secure secret.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="manager card pad" id="managerView">
+    <div class="section-head">
+      <div>
+        <h2>Manager Overview</h2>
+        <div class="hint">Running totals from orders logged on this browser.</div>
+      </div>
+      <button class="btn" id="backBtn">← Back to orders</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><small>Total revenue</small><b id="sRevenue">$0.00</b></div>
+      <div class="stat"><small>Net sales</small><b id="sNet">$0.00</b></div>
+      <div class="stat"><small>Tax collected</small><b id="sTax">$0.00</b></div>
+      <div class="stat"><small>Orders</small><b id="sOrders">0</b></div>
+      <div class="stat"><small>Items sold</small><b id="sItems">0</b></div>
+      <div class="stat"><small>Top seller</small><b id="sSeller">—</b></div>
+    </div>
+
+    <div class="manager-tools">
+      <button class="btn good" id="exportBtn">⬇ Download spreadsheet CSV</button>
+      <button class="btn" id="exportSummaryBtn">⬇ Download manager summary CSV</button>
+      <button class="btn danger" id="clearLogBtn">Clear all logged orders</button>
+    </div>
+
+    <div class="manager-grid">
+      <div class="card table-card">
+        <div class="pad"><h3>By employee</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Employee</th><th class="num">Orders</th><th class="num">Items</th><th class="num">Revenue</th></tr></thead>
+            <tbody id="employeeTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <div class="pad"><h3>Products sold</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Product</th><th class="num">Qty</th><th class="num">Net</th><th class="num">Share</th></tr></thead>
+            <tbody id="productTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card table-card full">
+        <div class="pad"><h3>Order log</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Customer</th><th>Employee</th><th>Items</th><th class="num">Subtotal</th><th class="num">Tax</th><th class="num">Total</th></tr></thead>
+            <tbody id="orderTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Static GitHub Pages version · data is stored locally in the browser</div>
+</div>
+
+<div class="modal-backdrop" id="settingsModal">
+  <div class="card pad modal">
+    <div class="section-head">
+      <h2>Settings</h2>
+      <button class="btn" id="closeSettings">Close</button>
+    </div>
+
+    <label for="businessName">Business name</label>
+    <input id="businessName" placeholder="Meat Market">
+
+    <div style="height:14px"></div>
+    <label>Default product prices</label>
+    <p class="hint">Optional. Employees can still overwrite these prices on each order.</p>
+    <div id="defaultPriceRows"></div>
+
+    <div style="height:14px"></div>
+    <label for="settingsWebhook">Discord webhook</label>
+    <input id="settingsWebhook" type="password" placeholder="https://discord.com/api/webhooks/…">
+    <p class="hint"><span class="status-dot" id="webhookDot"></span><span id="webhookStatus">Not saved on this device</span></p>
+
+    <div class="stack">
+      <button class="btn primary" id="saveSettings">Save settings on this device</button>
+      <button class="btn" id="forgetWebhook">Forget saved webhook</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TAX_RATE = 0.10;
+const PRODUCTS = [
+  {id:'raw_cow_meat', name:'Raw Cow Meat', image:'assets/raw-cow-meat.png'},
+  {id:'raw_pork', name:'Raw Pork', image:'assets/raw-pork.png'},
+  {id:'milk', name:'Milk', image:'assets/milk.png'},
+  {id:'whole_chicken', name:'Whole Chicken', image:'assets/whole-chicken.png'},
+  {id:'egg', name:'Egg', image:'assets/egg.png'}
+];
+const KEYS = {
+  orders:'meat_market_orders_v1',
+  settings:'meat_market_settings_v1'
+};
+const $ = s => document.querySelector(s);
+const money = n => '$' + Number(n || 0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+function getSettings(){
+  try{
+    return Object.assign({
+      businessName:'Meat Market',
+      webhook:'',
+      defaultPrices:{}
+    }, JSON.parse(localStorage.getItem(KEYS.settings) || '{}'));
+  }catch{return {businessName:'Meat Market',webhook:'',defaultPrices:{}}}
+}
+function setSettings(v){ localStorage.setItem(KEYS.settings, JSON.stringify(v)); }
+function getOrders(){
+  try{return JSON.parse(localStorage.getItem(KEYS.orders) || '[]')}catch{return []}
+}
+function setOrders(v){localStorage.setItem(KEYS.orders, JSON.stringify(v))}
+function toast(msg, good=false){
+  const t=$('#toast'); t.textContent=msg; t.style.borderColor=good?'#2d8665':'#5c7380'; t.classList.add('show');
+  clearTimeout(window.__toastTimer); window.__toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function renderProducts(){
+  const settings=getSettings();
+  $('#productGrid').innerHTML=PRODUCTS.map(p=>`
+    <div class="product" data-id="${p.id}">
+      <img src="${p.image}" alt="${esc(p.name)}">
+      <div>
+        <div class="product-name">${esc(p.name)}</div>
+        <div class="row2">
+          <div class="mini">
+            <label>Qty</label>
+            <input class="qty" type="number" min="0" step="1" value="0" inputmode="numeric">
+          </div>
+          <div class="mini">
+            <label>Unit price $</label>
+            <input class="price" type="number" min="0" step="0.01" value="${settings.defaultPrices[p.id] ?? ''}" placeholder="0.00" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('.qty,.price').forEach(el=>el.addEventListener('input',updateBill));
+  updateBill();
+}
+
+function currentItems(){
+  return [...document.querySelectorAll('.product')].map(row=>{
+    const id=row.dataset.id;
+    const product=PRODUCTS.find(p=>p.id===id);
+    const qty=Math.max(0, parseInt(row.querySelector('.qty').value || 0,10) || 0);
+    const price=Math.max(0, parseFloat(row.querySelector('.price').value || 0) || 0);
+    return {...product, qty, price, line:qty*price};
+  }).filter(x=>x.qty>0);
+}
+function totals(){
+  const items=currentItems();
+  const subtotal=items.reduce((s,x)=>s+x.line,0);
+  const tax=subtotal*TAX_RATE;
+  return {items,subtotal,tax,total:subtotal+tax};
+}
+function updateBill(){
+  const t=totals();
+  $('#subtotal').textContent=money(t.subtotal);
+  $('#tax').textContent=money(t.tax);
+  $('#total').textContent=money(t.total);
+  $('#ticketItems').innerHTML=t.items.length
+    ? t.items.map(x=>`<li><span>${x.qty} × ${esc(x.name)} @ ${money(x.price)}</span><strong>${money(x.line)}</strong></li>`).join('')
+    : '<li><span>No products added yet</span><strong>—</strong></li>';
+}
+function nextId(){
+  return 'SALE-' + new Date().toISOString().slice(0,10).replaceAll('-','') + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+}
+function buildOrder(){
+  const employee=$('#employee').value.trim();
+  const customer=$('#customer').value.trim();
+  const t=totals();
+  if(!employee) throw new Error('Enter the employee name.');
+  if(!customer) throw new Error('Enter the customer name.');
+  if(!t.items.length) throw new Error('Add at least one product.');
+  if(t.items.some(x=>x.price<=0)) throw new Error('Enter a unit price for every product in the order.');
+  return {
+    id:nextId(),
+    createdAt:new Date().toISOString(),
+    employee,customer,
+    taxRate:TAX_RATE,
+    items:t.items.map(({id,name,qty,price,line})=>({id,name,qty,price,line})),
+    subtotal:t.subtotal,tax:t.tax,total:t.total
+  };
+}
+function ticketText(order){
+  const business=getSettings().businessName || 'Meat Market';
+  return [
+    `${business.toUpperCase()} — SALES TICKET`,
+    `Order: ${order.id}`,
+    `Employee: ${order.employee}`,
+    `Customer: ${order.customer}`,
+    '',
+    ...order.items.map(x=>`${x.qty}x ${x.name} @ ${money(x.price)} = ${money(x.line)}`),
+    '',
+    `Subtotal: ${money(order.subtotal)}`,
+    `Tax (${Math.round(order.taxRate*100)}%): ${money(order.tax)}`,
+    `TOTAL: ${money(order.total)}`
+  ].join('\n');
+}
+function clearCurrent(){
+  $('#customer').value='';
+  document.querySelectorAll('.product').forEach(row=>row.querySelector('.qty').value=0);
+  renderProducts();
+}
+function logSale(){
+  try{
+    const o=buildOrder();
+    const orders=getOrders(); orders.push(o); setOrders(orders);
+    $('#orderIdPreview').textContent=o.id;
+    renderManager();
+    toast(`Sale ${o.id} logged.`, true);
+    clearCurrent();
+  }catch(e){toast(e.message)}
+}
+async function copyTicket(){
+  try{
+    const o=buildOrder();
+    await navigator.clipboard.writeText(ticketText(o));
+    toast('Ticket copied.', true);
+  }catch(e){toast(e.message || 'Could not copy ticket.')}
+}
+async function sendDiscord(){
+  let o;
+  try{o=buildOrder()}catch(e){toast(e.message);return}
+  const url=$('#webhook').value.trim();
+  if(!/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\//i.test(url)){
+    toast('Enter a valid Discord webhook URL.'); return;
+  }
+  const business=getSettings().businessName || 'Meat Market';
+  const itemText=o.items.map(x=>`**${x.qty}x ${x.name}** — ${money(x.price)} each — ${money(x.line)}`).join('\n');
+  const payload={
+    username:`${business} Sales`,
+    embeds:[{
+      title:`🧾 ${business} Sale`,
+      description:itemText,
+      color:11942722,
+      fields:[
+        {name:'Employee',value:o.employee,inline:true},
+        {name:'Customer',value:o.customer,inline:true},
+        {name:'Order ID',value:o.id,inline:false},
+        {name:'Subtotal',value:money(o.subtotal),inline:true},
+        {name:'Tax (10%)',value:money(o.tax),inline:true},
+        {name:'Total',value:`**${money(o.total)}**`,inline:true}
+      ],
+      timestamp:o.createdAt
+    }]
+  };
+  try{
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error('Discord returned ' + res.status);
+    toast('Ticket sent to Discord.', true);
+  }catch(e){
+    toast('Discord send failed. A static browser page may be blocked by webhook/CORS settings.');
+  }
+}
+
+function renderManager(){
+  const orders=getOrders();
+  const revenue=orders.reduce((s,o)=>s+Number(o.total||0),0);
+  const net=orders.reduce((s,o)=>s+Number(o.subtotal||0),0);
+  const tax=orders.reduce((s,o)=>s+Number(o.tax||0),0);
+  const items=orders.reduce((s,o)=>s+(o.items||[]).reduce((q,x)=>q+Number(x.qty||0),0),0);
+
+  const byEmp={};
+  const byProd={};
+  orders.forEach(o=>{
+    const ek=o.employee || 'Unknown';
+    if(!byEmp[ek]) byEmp[ek]={orders:0,items:0,revenue:0};
+    byEmp[ek].orders++;
+    byEmp[ek].revenue+=Number(o.total||0);
+    byEmp[ek].items+=(o.items||[]).reduce((s,x)=>s+Number(x.qty||0),0);
+    (o.items||[]).forEach(x=>{
+      if(!byProd[x.name]) byProd[x.name]={qty:0,net:0};
+      byProd[x.name].qty+=Number(x.qty||0);
+      byProd[x.name].net+=Number(x.line||0);
+    });
+  });
+  const topSeller=Object.entries(byEmp).sort((a,b)=>b[1].revenue-a[1].revenue)[0]?.[0] || '—';
+
+  $('#sRevenue').textContent=money(revenue);
+  $('#sNet').textContent=money(net);
+  $('#sTax').textContent=money(tax);
+  $('#sOrders').textContent=orders.length;
+  $('#sItems').textContent=items;
+  $('#sSeller').textContent=topSeller;
+
+  const empEntries=Object.entries(byEmp).sort((a,b)=>b[1].revenue-a[1].revenue);
+  $('#employeeTable').innerHTML=empEntries.length?empEntries.map(([name,v])=>`
+    <tr><td>${esc(name)}</td><td class="num">${v.orders}</td><td class="num">${v.items}</td><td class="num">${money(v.revenue)}</td></tr>
+  `).join(''):'<tr><td colspan="4" class="empty">No orders logged yet.</td></tr>';
+
+  const prodEntries=Object.entries(byProd).sort((a,b)=>b[1].net-a[1].net);
+  $('#productTable').innerHTML=prodEntries.length?prodEntries.map(([name,v])=>`
+    <tr><td>${esc(name)}</td><td class="num">${v.qty}</td><td class="num">${money(v.net)}</td><td class="num">${net?((v.net/net)*100).toFixed(1):'0.0'}%</td></tr>
+  `).join(''):'<tr><td colspan="4" class="empty">No product sales yet.</td></tr>';
+
+  $('#orderTable').innerHTML=orders.length?[...orders].reverse().map(o=>`
+    <tr>
+      <td>${new Date(o.createdAt).toLocaleString()}</td>
+      <td>${esc(o.customer)}</td>
+      <td>${esc(o.employee)}</td>
+      <td>${(o.items||[]).map(x=>`${x.qty}× ${esc(x.name)}`).join('<br>')}</td>
+      <td class="num">${money(o.subtotal)}</td>
+      <td class="num">${money(o.tax)}</td>
+      <td class="num"><strong>${money(o.total)}</strong></td>
+    </tr>
+  `).join(''):'<tr><td colspan="7" class="empty">No orders logged yet.</td></tr>';
+}
+function csvCell(v){
+  const s=String(v ?? '');
+  return /[",\n]/.test(s)?`"${s.replaceAll('"','""')}"`:s;
+}
+function download(name, content){
+  const blob=new Blob([content],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function exportOrders(){
+  const rows=[['Order ID','Date','Employee','Customer','Product','Quantity','Unit Price','Line Net','Tax Rate','Order Subtotal','Order Tax','Order Total']];
+  getOrders().forEach(o=>(o.items||[]).forEach(x=>rows.push([
+    o.id,o.createdAt,o.employee,o.customer,x.name,x.qty,x.price,x.line,o.taxRate,o.subtotal,o.tax,o.total
+  ])));
+  if(rows.length===1){toast('No orders to export.');return}
+  download('sales-orders.csv','\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\n'));
+  toast('Sales spreadsheet downloaded.', true);
+}
+function exportSummary(){
+  const orders=getOrders();
+  if(!orders.length){toast('No orders to export.');return}
+  const emp={};
+  orders.forEach(o=>{
+    if(!emp[o.employee])emp[o.employee]={orders:0,subtotal:0,tax:0,total:0,items:0};
+    emp[o.employee].orders++;
+    emp[o.employee].subtotal+=o.subtotal; emp[o.employee].tax+=o.tax; emp[o.employee].total+=o.total;
+    emp[o.employee].items+=(o.items||[]).reduce((s,x)=>s+x.qty,0);
+  });
+  const rows=[['Employee','Orders','Items','Net Sales','Tax Collected','Total Revenue']];
+  Object.entries(emp).sort((a,b)=>b[1].total-a[1].total).forEach(([name,v])=>rows.push([name,v.orders,v.items,v.subtotal,v.tax,v.total]));
+  download('manager-summary.csv','\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\n'));
+  toast('Manager summary downloaded.', true);
+}
+
+function renderSettings(){
+  const s=getSettings();
+  $('#businessName').value=s.businessName || '';
+  $('#settingsWebhook').value=s.webhook || '';
+  $('#webhook').value=s.webhook || '';
+  $('#businessTitle').textContent=(s.businessName || 'Meat Market') + ' Order Calculator';
+  $('#defaultPriceRows').innerHTML=PRODUCTS.map(p=>`
+    <div class="default-row">
+      <strong>${esc(p.name)}</strong>
+      <input data-price-id="${p.id}" type="number" min="0" step="0.01" value="${s.defaultPrices[p.id] ?? ''}" placeholder="0.00">
+    </div>`).join('');
+  const has=!!s.webhook;
+  $('#webhookDot').classList.toggle('ok',has);
+  $('#webhookStatus').textContent=has?'Webhook saved on this device':'Not saved on this device';
+}
+function saveSettings(){
+  const prices={};
+  document.querySelectorAll('[data-price-id]').forEach(el=>{
+    const v=parseFloat(el.value);
+    if(Number.isFinite(v) && v>=0) prices[el.dataset.priceId]=v;
+  });
+  const s={
+    businessName:$('#businessName').value.trim() || 'Meat Market',
+    webhook:$('#settingsWebhook').value.trim(),
+    defaultPrices:prices
+  };
+  setSettings(s);
+  renderSettings();renderProducts();
+  $('#settingsModal').classList.remove('open');
+  toast('Settings saved on this device.', true);
+}
+function forgetWebhook(){
+  const s=getSettings();s.webhook='';setSettings(s);renderSettings();toast('Saved webhook removed.', true);
+}
+
+$('#logBtn').addEventListener('click',logSale);
+$('#copyBtn').addEventListener('click',copyTicket);
+$('#clearBtn').addEventListener('click',clearCurrent);
+$('#sendDiscordBtn').addEventListener('click',sendDiscord);
+$('#managerBtn').addEventListener('click',()=>{$('#orderView').style.display='none';$('#managerView').classList.add('active');renderManager()});
+$('#backBtn').addEventListener('click',()=>{$('#managerView').classList.remove('active');$('#orderView').style.display='block'});
+$('#settingsBtn').addEventListener('click',()=>{renderSettings();$('#settingsModal').classList.add('open')});
+$('#closeSettings').addEventListener('click',()=>$('#settingsModal').classList.remove('open'));
+$('#settingsModal').addEventListener('click',e=>{if(e.target===$('#settingsModal'))$('#settingsModal').classList.remove('open')});
+$('#saveSettings').addEventListener('click',saveSettings);
+$('#forgetWebhook').addEventListener('click',forgetWebhook);
+$('#exportBtn').addEventListener('click',exportOrders);
+$('#exportSummaryBtn').addEventListener('click',exportSummary);
+$('#clearLogBtn').addEventListener('click',()=>{
+  if(confirm('Clear ALL logged orders on this browser? This cannot be undone.')){
+    setOrders([]);renderManager();toast('All logged orders cleared.');
+  }
+});
+
+renderSettings();
+renderProducts();
+renderManager();
+</script>
+</body>
+</html>
